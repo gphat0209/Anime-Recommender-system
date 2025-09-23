@@ -22,17 +22,71 @@ with st.sidebar:
     st.text_input("API Base URL", key="api_base")
 
 # ---------------- Helpers ----------------
-def call_search(keyword: str, genres: list[str] = None):
+def call_search(keyword: str):
     """Gọi API search anime theo từ khóa"""
     url = f"{st.session_state.api_base}/anime/search"
-    body = {"q": keyword, "genres": genres}
+    body = {"q": keyword}
     try:
-        resp = requests.get(url, json=body, timeout=30)
+        resp = requests.get(url, params=body, timeout=30)
         resp.raise_for_status()
         return resp.json()
     except Exception as e:
         st.error(f"Lỗi search: {e}")
         return None
+
+
+
+def view_search():
+    st.title("🔎 Search Anime")
+    st.markdown("<div style='margin-top:0.6rem'></div>", unsafe_allow_html=True)
+
+    keyword = st.text_input(
+        "Enter anime description", 
+        placeholder="VD: Anime about ninjas, ...",
+    )  
+
+    run = st.button("Search", type="primary")
+
+    # 🔹 Khi bấm Search -> lưu vào session_state
+    if run and keyword.strip():
+        with st.spinner("Finding..."):
+            data = call_search(keyword.strip())
+            if not data:
+                st.warning("Couldn't find any anime.")
+                return
+            st.session_state["search_results"] = pd.DataFrame(data)
+
+    # 🔹 Nếu đã có kết quả thì hiển thị + filter
+    if "search_results" in st.session_state:
+        df = st.session_state["search_results"].copy()
+        # df["Link"] = "https://myanimelist.net/anime/" + df["ID"].astype(str)
+
+        # Lấy tất cả genres từ list
+        all_genres = sorted({g for row in df["Genres"].dropna() for g in row})
+        selected_genres = st.multiselect("🎭 Filter by Genres", options=all_genres)
+
+        # Lọc dữ liệu
+        if selected_genres:
+            mask = df["Genres"].apply(lambda genres: all(g in genres for g in selected_genres))
+            df = df[mask]
+
+        # Hiển thị
+        df_display = df.copy()
+        df_display["Link"] = "https://myanimelist.net/anime/" + df_display["ID"].astype(str)
+        display_cols = ["Name", "Type", "Aired", "Episode", "Genres", "Score", "Link"]
+        # st.dataframe(df_display[display_cols], use_container_width=True)
+        # st.markdown(df_display[display_cols].to_html(escape=False, index=False), unsafe_allow_html=True)
+        st.data_editor(
+            df_display[display_cols],
+            use_container_width=True,
+            column_config={
+                "Link": st.column_config.LinkColumn("Link", display_text="🔗 Link")
+            },
+            hide_index=True,
+        )
+
+
+
 
 def call_evaluate(synopsis: str, genres: list[str] = None):
     """Gọi API đánh giá anime"""
@@ -45,29 +99,6 @@ def call_evaluate(synopsis: str, genres: list[str] = None):
     except Exception as e:
         st.error(f"Lỗi evaluate: {e}")
         return None
-
-# ---------------- Views ----------------
-def view_search():
-    st.title("🔎 Search Anime")
-    st.markdown("<div style='margin-top:0.6rem'></div>", unsafe_allow_html=True)
-    keyword = st.text_input(
-    "Enter anime description", 
-    placeholder="VD: Anime about ninjas, ...",
-    )  
-    st.markdown("<div style='margin-top:0.6rem'></div>", unsafe_allow_html=True)
-    genres = st.multiselect("Chose genres", ["Action", "Romance", "Comedy", "Drama", "Fantasy", "Sci-Fi"])
-
-    run = st.button("Search", type="primary")
-
-    if run and keyword.strip():
-        with st.spinner("Finding..."):
-            data = call_search(keyword.strip(), genres)
-            if not data:
-                st.warning("Couldn't find any anime.")
-                return
-
-            df = pd.DataFrame(data)
-            st.dataframe(df, use_container_width=True)
 
 def view_evaluate():
     st.title("⭐ Evaluate Anime")
