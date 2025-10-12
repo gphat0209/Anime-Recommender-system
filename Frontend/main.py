@@ -35,7 +35,6 @@ def call_search(keyword: str):
         return None
 
 
-
 def view_search():
     st.title("🔎 Search Anime")
     st.markdown("<div style='margin-top:0.6rem'></div>", unsafe_allow_html=True)
@@ -56,7 +55,6 @@ def view_search():
                 return
             st.session_state["search_results"] = pd.DataFrame(data)
 
-    # 🔹 Nếu đã có kết quả thì hiển thị + filter
     if "search_results" in st.session_state:
         df = st.session_state["search_results"].copy()
         # df["Link"] = "https://myanimelist.net/anime/" + df["ID"].astype(str)
@@ -65,7 +63,6 @@ def view_search():
         all_genres = sorted({g for row in df["Genres"].dropna() for g in row})
         selected_genres = st.multiselect("🎭 Filter by Genres", options=all_genres)
 
-        # Lọc dữ liệu
         if selected_genres:
             mask = df["Genres"].apply(lambda genres: all(g in genres for g in selected_genres))
             df = df[mask]
@@ -85,7 +82,16 @@ def view_search():
             hide_index=True,
         )
 
-
+@st.cache_data
+def fetch_genres():
+    url = f"{st.session_state.api_base}/anime/genres"
+    try:
+        resp = requests.get(url, timeout=30)
+        resp.raise_for_status()
+        return resp.json().get("genres", [])
+    except Exception as e:
+        st.error(f"Lỗi khi lấy danh sách thể loại: {e}")
+        return []
 
 
 def call_evaluate(synopsis: str, genres: list[str] = None):
@@ -105,7 +111,9 @@ def view_evaluate():
     st.markdown("<div style='margin-top:0.6rem'></div>", unsafe_allow_html=True)
     synopsis = st.text_area("Enter synopsis", placeholder="A girl discovers she has magical powers...")
     st.markdown("<div style='margin-top:0.6rem'></div>", unsafe_allow_html=True)
-    genres = st.multiselect("Chose genres", ["Action", "Romance", "Comedy", "Drama", "Fantasy", "Sci-Fi"])
+    all_genres = fetch_genres()
+    genres = st.multiselect("Choose genres", all_genres)
+    # genres = st.multiselect("Choose genres", ["Action", "Romance", "Comedy", "Drama", "Fantasy", "Sci-Fi"])
     run = st.button("Evaluate", type="primary")
 
     if run and synopsis.strip():
@@ -114,8 +122,16 @@ def view_evaluate():
             if not result:
                 st.warning("No result from backend.")
                 return
-            st.success(f"📊 Prediction: **{result.get('label','N/A')}**")
-            st.json(result)
+
+            # Hiển thị kết quả dự đoán và phản hồi tự nhiên
+            # st.json(result)
+            st.markdown(f"### 🎯 Prediction: **{result.get('label','N/A')}**")
+            # st.markdown(f"**Confidence:** {result.get('confidence', 0):.2f}")
+            st.divider()
+            st.markdown("### 💬 Comment")
+            st.markdown(result.get("comment", "No comment generated."))
+            # print(result.get("comment"))
+            # st.write(result.get("comment", "No comment generated."))
 
 # ---------------- Router ----------------
 if __name__ == "__main__" or True:
