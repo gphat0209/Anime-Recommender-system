@@ -1,11 +1,19 @@
-# 🚀 Anime Recommender System: A system that can tell whether your anime is Worth-watching 
-
-## 📝 Overview
-Anime Recommender System is an AI-powered system that can handle your interest in anime, by simply search animes that are close to your query or evaluate an anime from its synopsis and genres
+# 🌟 Anime Recommender System  
+### 🔍 Find the Right Anime – 🎭 Evaluate Anime Quality from Synopsis
 
 ---
 
-## 🗂️ Project Structure
+## 📌 Overview
+**Anime Recommender System** is an AI-powered platform that helps users:
+
+- 🔎 **Search for anime** based on semantic similarity.  
+- 🎯 **Predict the quality tier** of an anime (Top-tier / Worthwhile / Watchable / Terrible) using synopsis and genres.
+
+The system integrates **vector databases**, **ML models**, and **LLM reasoning** to produce accurate and natural responses.
+
+---
+
+## 📂 Project Structure
 
 ```
 ANIME RECOMMENDATION SYSTEM/
@@ -37,93 +45,103 @@ ANIME RECOMMENDATION SYSTEM/
 ---
 
 
-### 1. Retrieve Data & Preprocessing
+## 🛠️ 1. Data Retrieval & Preprocessing
 
-- **Data Source (Crawling):**
-Anime metadata and user reviews were crawled public anime databases (e.g., MyAnimeList).
-Only anime titles with ≥ 100,000 user ratings were retained to ensure reliability and data quality.
+### 📥 Data Crawling
+- Collected anime metadata and user reviews from public databases (e.g., MyAnimeList).  
+- Only anime with **≥ 100,000 user ratings** were kept to ensure data reliability.
 
-- **Preprocessing:**
-Each anime entry was normalized and cleaned. The processed dataset includes:
+### 🧹 Preprocessing
+Each anime entry includes:
 
-- Title
+- ✏️ Title  
+- 📖 Synopsis  
+- 🏷️ Genres  
+- ⭐ Score / Rating  
+- 🏆 **Quality Label**: Top-tier, Worthwhile, Watchable, or Terrible  
+  (derived from normalized score distribution)
 
-- Synopsis
+### 🗄️ Storage
+- Cleaned and structured data is stored in **PostgreSQL** for efficient access.
 
-- Genres
+---
 
-- Score / Rating
+## 🔎 2. Anime Semantic Search
 
-- Label (Quality Tier): Categorized as Top-tier, Worthwhile, Watchable, or Terrible based on the normalized score distribution.
+### 🎯 Goal
+Return anime that semantically match the user’s input description.
 
-- **Storage:**
-Cleaned data are stored in PostgreSQL for structured access and analysis.
+### 📦 Vector Database
+- Generate embeddings from anime synopsis using **Gemini Embedding**.  
+- Store embeddings inside **Qdrant** for semantic vector search.
 
-### 2. Anime Search & Query
+### 📌 Result
+Users enter a description → system returns:
 
-- **Goal:**
-Search a right anime based on the user input.
+- Closest-matching anime  
+- Their synopsis & genres  
+- Link to MyAnimeList  
 
-- **Data Storage:**
-Store them embedding of each anime's synopsis in Qdrant vector database, that help capture the semantic meaning of each one.
+### 🌐 Deployment  
+Exposed via FastAPI endpoint:
 
-- **Result:**
-When user enter a description, the website will return every anime that has the plot matches to the input description, its details and also the link to MyAnimeList page.
+<pre> ```bash GET /anime/search ``` </pre>
+---
+
+## 🤖 3. Model Training & Anime Evaluation
+
+### 🧠 Embedding  
+- Use **Gemini Embedding** to encode (synopsis + genres).  
+- Embeddings capture tone, narrative structure, and genre patterns.
+
+### 🎓 Classifier  
+- Logistic Regression or MLP classifier trained on embedding vectors.  
+- Train/Test split: 70/30  
+- **Accuracy:** ~0.60 (train), ~0.45 (test) — strong baseline for limited data.
+
+### 🌐 Deployment  
+Exposed via FastAPI endpoint:
+
+<pre> ```bash POST /anime/evaluate ``` </pre>
 
 
-### 3. Model Training and Anime Evaluating
-- **Goal:**
-Predict the quality tier of an anime (Top-tier / Worthwhile / Watchable / Terrible) based on its synopsis and genres.
+Prediction pipeline:
 
-- **Training Process:**
+1. Embed the input text  
+2. Classifier predicts the label  
+3. LLM (Gemini) generates a natural explanation/comment  
 
-- Embedding Model:
+---
 
-Use a pre-trained sentence embedding model (Gemini Embedding) to encode synopsis + genres into semantic vectors.
-These embeddings capture narrative structure, emotional tone, and genre patterns.
+## 🖥️ 4. Web Interface
+- Built with **Streamlit**  
+- Provides two main features:  
+  - 🔍 Anime Semantic Search  
+  - 🏷️ Anime Quality Evaluation  
 
-- Classifier:
-
-Train a Logistic Regression classifier (or MLP variant) on top of embeddings.
-The classifier learns to separate anime into quality categories in the embedding space.
-
-- Evaluation:
-
-Split dataset into train/test (e.g., 70/30).
-Achieved accuracy: ~0.60 on training, ~0.45 on test — a good baseline for limited data scenarios.
-
-- Deployment:
-
-Serve as a FastAPI endpoint /anime/evaluate.
-
-When a user inputs a new synopsis and selected genres:
-1. The text is embedded.
-2. The trained model predicts the label.
-3. An LLM layer (Gemini) generates a natural comment explaining the reasoning and tone-adjusted feedback for the user.
+---
 
 ## 📚 References
 
-### Key GitHub Repositories
-- [LangChain](https://github.com/langchain-ai/langchain) 🧠
-- [FastAPI](https://github.com/tiangolo/fastapi) ⚡
-- [Qdrant Vector Database](https://github.com/qdrant/qdrant) 🗄️
-- [PostgreSQL](https://github.com/postgres/postgres) 🛢️
+### 🔧 Technologies Used
+- [LangChain](https://github.com/langchain-ai/langchain)  
+- [FastAPI](https://github.com/tiangolo/fastapi)  
+- [Qdrant Vector Database](https://github.com/qdrant/qdrant)  
+- [PostgreSQL](https://github.com/postgres/postgres)
 
-### Related Research Papers & Articles
-- [Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401) 📙
-- [Semantic Search with Vector Databases](https://towardsdatascience.com/semantic-search-with-vector-databases-5c6b4c3d8e4b) 🔎
-
----
-
-## ✨ Credits
-
-Project initiated by [Truong Cong Gia Phat](https://github.com/gphat0209).
+### 📖 Papers & Articles
+- *Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks*  
+- *Semantic Search with Vector Databases*
 
 ---
 
-## 📄 License
+## 👤 Credits
+Project created by **[Truong Cong Gia Phat](https://github.com/gphat0209)**.
 
-This project is licensed under the MIT License.
+---
+
+## 📝 License
+Distributed under the **MIT License**.
 
 
 
