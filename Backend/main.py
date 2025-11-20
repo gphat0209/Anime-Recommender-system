@@ -3,13 +3,11 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from qdrant_client import QdrantClient
 from langchain_community.embeddings import GPT4AllEmbeddings
-from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import List, Optional
 from sqlalchemy import create_engine, text
 import re
 import joblib
-import os
 
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 from langchain.prompts import ChatPromptTemplate
@@ -18,7 +16,7 @@ from dotenv import load_dotenv
 import os
 load_dotenv()
 
-from services.search import search_anime_hybrid, search_anime_semantic
+from services.search import search_anime_semantic
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "database", "qdrant_anime_db")
@@ -64,7 +62,7 @@ async def search(q:str):
         import traceback; traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Upload failed: {e}")
     
-MODEL_PATH = "../Fine-tuning/anime_model/lr_anime_classifier.pkl"
+MODEL_PATH = "anime_model/lr_anime_classifier.pkl"
 
 if not os.path.exists(MODEL_PATH):
     raise FileNotFoundError(f"❌ Model not found at {MODEL_PATH}")
@@ -76,8 +74,6 @@ embeddings = GoogleGenerativeAIEmbeddings(
     model="models/gemini-embedding-exp-03-07",
     google_api_key=os.getenv("GOOGLE_API_KEY")
 )
-
-
 
 # === Request schema ===
 class AnimeEvalRequest(BaseModel):
@@ -117,7 +113,6 @@ Guidelines:
 """
 
 prompt = ChatPromptTemplate.from_template(chat_template)
-# === Endpoint chính ===
 @app.post("/anime/evaluate", response_model=AnimeEvalResponse)
 def evaluate_anime(req: AnimeEvalRequest):
     text = req.synopsis.strip()
@@ -156,12 +151,13 @@ def evaluate_anime(req: AnimeEvalRequest):
         "confidence": round(pred_proba, 3),
         "comment": llm_response.content.strip(),
     }
-database_url = os.getenv("DATABASE_URL")
-engine = create_engine(database_url)
+
 
 @app.get("/anime/genres")
 def get_unique_genres():
     """Lấy danh sách thể loại duy nhất từ bảng details"""
+    database_url = os.getenv("DATABASE_URL")
+    engine = create_engine(database_url)
     with engine.connect() as conn:
         rows = conn.execute(text("SELECT genres FROM details WHERE genres IS NOT NULL")).fetchall()
 

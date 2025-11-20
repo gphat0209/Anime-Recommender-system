@@ -1,25 +1,8 @@
-# from dotenv import load_dotenv
-# import os
-# from langchain_google_genai import GoogleGenerativeAIEmbeddings
-# from qdrant_client import QdrantClient
-
-# from qdrant_client.models import Distance, VectorParams, PointStruct
-# from qdrant_client.http.models import VectorParams, Distance, SparseVectorParams, SparseIndexParams
 from qdrant_client.http.models import PointStruct, SparseVector
 
 from collections import defaultdict
 from qdrant_client.http import models
-# from langchain_community.embeddings import GPT4AllEmbeddings
-# import hashlib
-# import json
-# load_dotenv()
 
-# GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-# EMBEDDING_MODEL_NAME = os.getenv("EMBEDDING_MODEL_NAME")
-#embedding_model = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL_NAME, api_key = GOOGLE_API_KEY)
-# COLLECTION_NAME = os.getenv("QDRANT_COLLECTION")
-# embedding_model = GPT4AllEmbeddings()
-# qdrant = QdrantClient(path="../database/qdarnt_anime_db")
 
 def dedup_sparse(indices, values):
     agg = defaultdict(float)

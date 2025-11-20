@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: anime_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: scan_cv
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: anime_pgadmin
+    depends_on:
+      - db
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "8080:80"
+    networks:
+      - app-network
+
+qdrant:
+    image: qdrant/qdrant:v1.11.0
+    container_name: anime_qdrant
+    ports:
+      - "6333:6333"   # HTTP
+      - "6334:6334"   # gRPC
+    environment:
+      QDRANT__SERVICE__GRPC_PORT: 6334
+      QDRANT__SERVICE__ENABLE_HTTP2: "true"
+      QDRANT__LOG_LEVEL: INFO
+      QDRANT__STORAGE__PERIODIC_SNAPSHOT: "true"
+      QDRANT__STORAGE__SNAPSHOT_PERIOD_SEC: 3600
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    networks:
+      - app-networkx  
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:6333/readyz"]
+      interval: 10s
+      timeout: 3s
+      retries: 15
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  qdrant_storage:
