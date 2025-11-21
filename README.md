@@ -19,8 +19,8 @@ The system integrates **vector databases**, **ML models**, and **LLM reasoning**
 ANIME RECOMMENDATION SYSTEM/
 │
 ├── Backend/
+│   ├── anime_model
 │   ├── database/
-│   ├── retrieve_preprocessing/
 │   ├── services/
 │   ├── main.py                # for running backend application
 │   └── requirements.txt
