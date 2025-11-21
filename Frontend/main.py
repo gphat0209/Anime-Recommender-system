@@ -82,17 +82,31 @@ def view_search():
             hide_index=True,
         )
 
+# @st.cache_data
+# def fetch_genres():
+#     url = f"{st.session_state.api_base}/anime/genres"
+#     try:
+#         resp = requests.get(url, timeout=30)
+#         resp.raise_for_status()
+#         return resp.json().get("genres", [])
+#     except Exception as e:
+#         st.error(f"Lỗi khi lấy danh sách thể loại: {e}")
+#         return []
+
 @st.cache_data
+def fetch_genres_cached(url):
+    resp = requests.get(url, timeout=30)
+    resp.raise_for_status()
+    return resp.json().get("genres", [])
+
 def fetch_genres():
     url = f"{st.session_state.api_base}/anime/genres"
     try:
-        resp = requests.get(url, timeout=30)
-        resp.raise_for_status()
-        return resp.json().get("genres", [])
+        return fetch_genres_cached(url)
     except Exception as e:
         st.error(f"Lỗi khi lấy danh sách thể loại: {e}")
+        # Không cache lỗi, trả về giá trị tạm thời
         return []
-
 
 def call_evaluate(synopsis: str, genres: list[str] = None):
     """Gọi API đánh giá anime"""
