@@ -85,8 +85,9 @@ Users enter a description → system returns:
 ### 🌐 Deployment  
 Exposed via FastAPI endpoint:
 
-<pre> ```bash GET /anime/search ``` </pre>
----
+```bash
+POST /anime/search
+```
 
 ## 🤖 3. Model Training & Anime Evaluation
 
@@ -102,7 +103,9 @@ Exposed via FastAPI endpoint:
 ### 🌐 Deployment  
 Exposed via FastAPI endpoint:
 
-<pre> ```bash POST /anime/evaluate ``` </pre>
+```bash
+POST /anime/evaluate
+```
 
 
 Prediction pipeline:
@@ -116,9 +119,13 @@ Prediction pipeline:
 ## 🖥️ 4. Web Interface
 - Built with **Streamlit**  
 - Provides two main features:  
+---
   - 🔍 Anime Semantic Search  
-  - 🏷️ Anime Quality Evaluation  
+  <img src="Images/search_anime.png" width="650"/>
 
+---
+  - 🏷️ Anime Quality Evaluation  
+  <img src="Images/evaluate_anime.png" width="650"/>
 ---
 
 ## 📚 References
