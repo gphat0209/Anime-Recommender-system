@@ -26,15 +26,15 @@ ANIME RECOMMENDATION SYSTEM/
 │   └── requirements.txt
 │
 ├── Frontend/
-│   ├── maim.py
+│   ├── main.py                # for running frontend web interface
 │   ├── Dockerfile
 │   ├── requirements.txt
 
-├── Fine-tuning/
-│   ├── anime_model/
-│   ├── training_data/
-│   ├── finetune.py
-│   ├── prepare_data.py
+├── Data & Model Preparation/
+│   ├── model_training/        # for training evaluation model
+│   ├── qdrant_loader/         # load essential data in qdrant database
+│   ├── retrieve_preprocessing # retrieve data for training
+│   ├── training_data          # used training data
 │
 ├── Images/                 # Documentation and workflow images
 │
