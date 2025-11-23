@@ -20,10 +20,12 @@ ANIME RECOMMENDATION SYSTEM/
 │
 ├── Backend/
 │   ├── anime_model
-│   ├── database/
+│   ├── data/
+│   ├── database_loader/
 │   ├── services/
 │   ├── main.py                # for running backend application
 │   └── requirements.txt
+│   └── Dockerfile.txt
 │
 ├── Frontend/
 │   ├── main.py                # for running frontend web interface
