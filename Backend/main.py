@@ -18,18 +18,30 @@ load_dotenv()
 
 from services.search import search_anime_semantic
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "database", "qdrant_anime_db")
+# BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# DB_PATH = os.path.join(BASE_DIR, "database", "qdrant_anime_db")
 
 
-# GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-# EMBEDDING_MODEL_NAME = os.getenv("EMBEDDING_MODEL_NAME")
-#embedding_model = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL_NAME, api_key = GOOGLE_API_KEY)
 COLLECTION_NAME = os.getenv("QDRANT_COLLECTION")
 embedding_model = GPT4AllEmbeddings()
-qdrant = QdrantClient(path=DB_PATH)
-collections = qdrant.get_collections()
-print(collections)
+
+# qdrant = QdrantClient(path=DB_PATH)
+
+qdrant = QdrantClient(
+    host="qdrant",
+    port=6333
+)
+
+# if not qdrant.collection_exists(COLLECTION_NAME):
+#     qdrant.create_collection(
+#         collection_name=COLLECTION_NAME,
+#         vectors_config={
+#             "dense": {
+#                 "size": 384,
+#                 "distance": "Cosine"
+#             }
+#         }
+#     )
 
 app = FastAPI(title="CV Manager API")
 
@@ -159,7 +171,7 @@ def get_unique_genres():
     database_url = os.getenv("DATABASE_URL")
     engine = create_engine(database_url)
     with engine.connect() as conn:
-        rows = conn.execute(text("SELECT genres FROM details WHERE genres IS NOT NULL")).fetchall()
+        rows = conn.execute(text("SELECT genres FROM anime WHERE genres IS NOT NULL")).fetchall()
 
     # Lấy tất cả genre và làm sạch
     genres = []

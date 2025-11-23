@@ -1,47 +1,22 @@
-# ==============================
-# 1️⃣ Base image: Python
-# ==============================
 FROM python:3.10-slim
 
-# ==============================
-# 2️⃣ Set working directory
-# ==============================
 WORKDIR /app
 
-# ==============================
-# 3️⃣ Copy dependency files
-# ==============================
-COPY requirements.txt .
-
-# ==============================
-# 4️⃣ Install dependencies
-# ==============================
+# Install OS deps
 RUN apt-get update && apt-get install -y \
     gcc \
-    g++ \
-    && pip install --no-cache-dir -r requirements.txt \
-    && apt-get clean \
+    libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# ==============================
-# 5️⃣ Copy source code
-# ==============================
+# Install Python deps
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy entire backend
 COPY . .
 
-# ==============================
-# 6️⃣ Environment variables
-# ==============================
-ENV PYTHONUNBUFFERED=1
-ENV PORT=8080
-ENV QDRANT_PATH=/app/database/qdrant_anime_db
-ENV GOOGLE_API_KEY=${GOOGLE_API_KEY}
+# Expose FastAPI port
+EXPOSE 8000
 
-# ==============================
-# 7️⃣ Expose port
-# ==============================
-EXPOSE 8080
-
-# ==============================
-# 8️⃣ Run FastAPI
-# ==============================
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
+# Default command
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -2,13 +2,14 @@
 import streamlit as st
 import pandas as pd
 import requests
+import os
 
 # ---------------- Config ----------------
 st.set_page_config(page_title="Anime Classifier", page_icon="🎬", layout="wide")
 
 # ---------------- Session ----------------
 if "api_base" not in st.session_state:
-    st.session_state.api_base = "http://localhost:8000"
+    st.session_state.api_base = os.getenv("API_BASE")
 
 # ---------------- Sidebar ----------------
 with st.sidebar:

@@ -1,58 +1,104 @@
-version: '3.8'
+version: "3.9"
 
 services:
-  db:
+
+  postgres:
     image: postgres:15
-    container_name: anime_db
+    container_name: anime-postgres
+    restart: always
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: scan_cv
-    ports:
-      - "5432:5432"
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks:
-      - app-network
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: anime-qdrant
+    restart: always
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_storage:/qdrant/storage
+
+
+  loader:
+    build: ./Backend
+    container_name: anime-loader
+    command: ["python", "load_all.py"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      DATABASE_URL: ${DATABASE_URL}
+      QDRANT_COLLECTION: ${QDRANT_COLLECTION}
+      POSTGRES_PORT: 5432
+      QDRANT_HOST: ${QDRANT_HOST}
+      QDRANT_PORT: 6333
+    volumes:
+      - ./Backend/data/output.json:/app/output.json
+      - ./Backend/anime_model:/app/anime_model
+
+  backend:
+    build: ./Backend
+    container_name: anime-backend
+    ports:
+      - "8000:8000"
+    environment:
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+      EMBEDDING_MODEL_NAME: ${EMBEDDING_MODEL_NAME}
+      QDRANT_COLLECTION: ${QDRANT_COLLECTION}
+      POSTGRES_HOST:  ${POSTGRES_HOST}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: 5432
+      DATABASE_URL: ${DATABASE_URL}
+    volumes:
+      - ./Backend/anime_model:/app/anime_model
+      - ./Backend/data/output.json:/app/output.json
+    depends_on:
+      - postgres
+      - qdrant
+
+  frontend:
+    build: ./Frontend
+    container_name: anime-frontend
+    ports:
+      - "8501:8501"
+    environment:
+      API_BASE: ${API_BASE}
+    depends_on:
+      backend:
+        condition: service_started
 
   pgadmin:
     image: dpage/pgadmin4
-    container_name: anime_pgadmin
+    container_name: anime-pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    ports:
+      - "5050:80"
     depends_on:
-      - db
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-    ports:
-      - "8080:80"
-    networks:
-      - app-network
-
-qdrant:
-    image: qdrant/qdrant:v1.11.0
-    container_name: anime_qdrant
-    ports:
-      - "6333:6333"   # HTTP
-      - "6334:6334"   # gRPC
-    environment:
-      QDRANT__SERVICE__GRPC_PORT: 6334
-      QDRANT__SERVICE__ENABLE_HTTP2: "true"
-      QDRANT__LOG_LEVEL: INFO
-      QDRANT__STORAGE__PERIODIC_SNAPSHOT: "true"
-      QDRANT__STORAGE__SNAPSHOT_PERIOD_SEC: 3600
-    volumes:
-      - qdrant_storage:/qdrant/storage
-    networks:
-      - app-networkx  
-    healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:6333/readyz"]
-      interval: 10s
-      timeout: 3s
-      retries: 15
-
-networks:
-  app-network:
-    driver: bridge
+      postgres:
+        condition: service_healthy
 
 volumes:
   postgres_data:
